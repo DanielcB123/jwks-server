@@ -24,6 +24,7 @@ Download and install Composer from [getcomposer.org](https://getcomposer.org/dow
 
 ## Project Structure
 
+```
 jwks-server/
 ├── keys/
 │ ├── private_key.pem
@@ -32,7 +33,7 @@ jwks-server/
 ├── composer.json
 ├── composer.lock
 └── server.php
-
+```
 
 ## Generating RSA Keys
 
