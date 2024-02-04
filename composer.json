@@ -1,0 +1,12 @@
+{
+    "name": "burge/jwks-server",
+    "description": "server",
+    "autoload": {
+        "psr-4": {
+            "Burge\\JwksServer\\": "src/"
+        }
+    },
+    "require": {
+        "firebase/php-jwt": "^6.10"
+    }
+}
