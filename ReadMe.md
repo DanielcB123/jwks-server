@@ -12,7 +12,7 @@ This JWKS (JSON Web Key Set) server is a simple implementation designed to serve
 
 ### 1. Install PHP
 
-Ensure PHP is installed on your system. You can download it from [the official PHP website](https://www.php.net/downloads.php). Add PHP to your system's PATH environment variable to run PHP commands from any command prompt.
+Ensure PHP is installed on our system. You can download it from [the official PHP website](https://www.php.net/downloads.php). Add PHP to our system's PATH environment variable to run PHP commands from any command prompt.
 
 ### 2. Install OpenSSL
 
@@ -20,7 +20,7 @@ OpenSSL is required to generate RSA keys. If not already installed, download and
 
 ### 3. Install Composer
 
-Download and install Composer from [getcomposer.org](https://getcomposer.org/download/). Follow the installation instructions to make Composer available globally on your system.
+Download and install Composer from [getcomposer.org](https://getcomposer.org/download/). Follow the installation instructions to make Composer available globally on our system.
 
 ## Project Structure
 
@@ -37,15 +37,13 @@ jwks-server/
 
 ## Generating RSA Keys
 
-In your project directory, use OpenSSL to generate the RSA keys:
+In our project directory, use our generate_keys.php to generate our .pem keys by using the command:
 
-    openssl genrsa -out keys/private_key.pem 2048
-    openssl rsa -in keys/private_key.pem -pubout -out keys/public_key.pem
-
+    php generate_keys.php
 
 ## Installing PHP Dependencies
 
-Navigate to your project directory and run:
+Navigate to our project directory and run:
 
     composer require firebase/php-jwt
 
@@ -54,7 +52,7 @@ This installs the necessary library for JWT handling.
 
 ## Running the Server
 
-From the root of your project directory, start the PHP built-in server:
+From the root of our project directory, start the PHP built-in server:
 
     php -S localhost:8080 server.php
 
@@ -74,3 +72,29 @@ Use PowerShell or another HTTP client to GET the JWKS:
 Issue a POST request to receive a JWT:
 
     Invoke-WebRequest -Uri "http://localhost:8080/auth" -Method Post
+
+
+## Testing with PHPUnit
+
+This project uses PHPUnit for testing to ensure reliability and robustness of the codebase. PHPUnit is a programmer-oriented testing framework for PHP. It is an instance of the xUnit architecture for unit testing frameworks.
+
+### Running Tests
+
+To run the tests, ensure PHPUnit is installed via Composer as a dev dependency. You can do so by running:
+
+    composer require --dev phpunit/phpunit
+
+After installing PHPUnit, you can run the tests using the following command:
+
+    vendor/bin/phpunit
+
+
+### Test Coverage
+
+Ensuring high test coverage is crucial for maintaining code quality and detecting issues early. This project aims for over 80% test coverage. To generate a test coverage report, you'll need to have Xdebug or pcov installed and configured with our PHP installation.
+
+Run the following command to generate a coverage report in HTML format:
+
+    vendor/bin/phpunit --coverage-html coverage-report
+
+

@@ -17,16 +17,16 @@ $keyDetails = openssl_pkey_get_details($publicKeyResource);
 $n = rtrim(strtr(base64_encode($keyDetails['rsa']['n']), '+/', '-_'), '=');
 $e = rtrim(strtr(base64_encode($keyDetails['rsa']['e']), '+/', '-_'), '=');
 
-// Simple request router
+// Request router
 $requestUri = $_SERVER['REQUEST_URI'];
 $method = $_SERVER['REQUEST_METHOD'];
+$path = parse_url($requestUri, PHP_URL_PATH); // Extract the path from the request URI
 
 header('Content-Type: application/json');
 
-switch ($requestUri) {
+switch ($path) { // Using the extracted path for routing
     case '/.well-known/jwks.json':
         if ($method == 'GET') {
-            // Serve the JWKS with dynamic public key
             $jwks = [
                 'keys' => [
                     [
@@ -40,7 +40,8 @@ switch ($requestUri) {
             ];
             echo json_encode($jwks);
         } else {
-            http_response_code(405); // Method Not Allowed
+            http_response_code(405);
+            echo json_encode(['error' => 'Method not allowed.']);
         }
         break;
     
@@ -50,23 +51,25 @@ switch ($requestUri) {
             $expirationTime = $issuedAt + 3600; // Token valid for 1 hour
 
             // Check for the 'expired' query parameter to issue an expired JWT
-            if (isset($_GET['expired']) && $_GET['expired'] == 'true') {
-                $expirationTime = $issuedAt - 3600; // Set expiration to 1 hour in the past
+            if (isset($_GET['expired']) && $_GET['expired'] === 'true') {
+                $expirationTime = $issuedAt - 3600; // Setting exp to 1 hour in the past
             }
 
             $payload = [
-                'iss' => 'http://localhost:8080', // Issuer
-                'aud' => 'http://localhost:8080', // Audience
-                'iat' => $issuedAt, // Issued at
-                'exp' => $expirationTime, // Expiration time
-                'sub' => '1234567890', // Subject
-                'name' => 'John Doe', // Example name
+                'iss' => 'http://127.0.0.1:8080',
+                'aud' => 'http://127.0.0.1:8080',
+                'iat' => $issuedAt,
+                'exp' => $expirationTime,
+                'sub' => '1234567890',
+                'name' => 'John Doe',
             ];
 
-            $jwt = JWT::encode($payload, $privateKey, 'RS256', '1'); // '1' is the key ID (kid)
+            $jwt = JWT::encode($payload, $privateKey, 'RS256', '1');
+            http_response_code(200);
             echo json_encode(['token' => $jwt]);
         } else {
-            http_response_code(405); // Method Not Allowed
+            http_response_code(405);
+            echo json_encode(['error' => 'Method not allowed.']);
         }
         break;
     
