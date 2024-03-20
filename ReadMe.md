@@ -26,20 +26,25 @@ Download and install Composer from [getcomposer.org](https://getcomposer.org/dow
 
 ```
 jwks-server/
-├── keys/
+├── keys_before_db                      (not in use anymore from project 1)
 │ ├── private_key.pem
 │ └── public_key.pem
 ├── vendor/
 ├── composer.json
 ├── composer.lock
+├── generate_keys.php                   (not in use anymore from project 1)
+├── generate_and_store_keys_old.php     (not in use anymore from project 1)
+├── setup_database.php
 └── server.php
 ```
 
-## Generating RSA Keys
+*** There are *_old.php files from project1 that I  did not want to delete ***
 
-In our project directory, use our generate_keys.php to generate our .pem keys by using the command:
+## Generating RSA Keys And Storing In Database
 
-    php generate_keys.php
+In our project directory, use our setup_database.php to generate our database and the .pem keys by using the command:
+
+    php setup_database.php
 
 ## Installing PHP Dependencies
 
@@ -54,7 +59,7 @@ This installs the necessary library for JWT handling.
 
 From the root of our project directory, start the PHP built-in server:
 
-    php -S localhost:8080 server.php
+    php -S 127.0.0.1:8080 server.php    (need to use 127.0.0.1 and not localhost)
 
 
 ## Testing the Server
@@ -63,7 +68,7 @@ From the root of our project directory, start the PHP built-in server:
 
 Use PowerShell or another HTTP client to GET the JWKS:
 
-    Invoke-WebRequest -Uri "http://localhost:8080/.well-known/jwks.json" -Method Get
+    Invoke-WebRequest -Uri "http://127.0.0.1:8080/.well-known/jwks.json" -Method Get
 
 
 
@@ -71,7 +76,7 @@ Use PowerShell or another HTTP client to GET the JWKS:
 
 Issue a POST request to receive a JWT:
 
-    Invoke-WebRequest -Uri "http://localhost:8080/auth" -Method Post
+    Invoke-WebRequest -Uri "http://127.0.0.1:8080/auth" -Method Post
 
 
 ## Testing with PHPUnit
@@ -97,4 +102,9 @@ Run the following command to generate a coverage report in HTML format:
 
     vendor/bin/phpunit --coverage-html coverage-report
 
+### GradeBot Test
+
+In the Root Directory Run this command:
+
+    ./gradebot project2
 
