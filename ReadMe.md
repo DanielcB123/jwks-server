@@ -93,4 +93,4 @@ Aiming for over 80% test coverage, this project prioritizes maintaining high-qua
 
 Run the following command in the project's root directory to perform automated testing:
 
-    ./gradebot project2
+    ./gradebot project3
