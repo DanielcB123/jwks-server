@@ -9,12 +9,20 @@ use Firebase\JWT\Key;
 $dbFile = 'totally_not_my_privateKeys.db';
 $pdo = new PDO('sqlite:' . $dbFile);
 
+// AES encryption/decryption key
+$encryptionKey = getenv('NOT_MY_KEY'); // Ensure this environment variable is securely set
+
 // Request router
 $requestUri = $_SERVER['REQUEST_URI'] ?? '';
 $method = $_SERVER['REQUEST_METHOD'] ?? 'GET';
 $path = parse_url($requestUri, PHP_URL_PATH); // Extract the path from the request URI
 
 header('Content-Type: application/json');
+
+// Simple rate limiter setup
+$rateLimitWindow = 10; // seconds
+$rateLimitMaxRequests = 10;
+$rateLimiterStorage = [];
 
 switch ($path) {
     case '/.well-known/jwks.json':
@@ -52,9 +60,47 @@ switch ($path) {
             echo json_encode(['error' => 'Method not allowed.']);
         }
         break;
+    case '/register':
+        if ($method == 'POST') {
+            $requestData = json_decode(file_get_contents('php://input'), true);
+            $username = $requestData['username'] ?? '';
+            $email = $requestData['email'] ?? '';
+            $password = bin2hex(random_bytes(16)); // Secure password generation
+            $passwordHash = password_hash($password, PASSWORD_ARGON2ID);
+
+            $stmt = $pdo->prepare("INSERT INTO users (username, email, password_hash) VALUES (:username, :email, :password_hash)");
+            if ($stmt->execute([':username' => $username, ':email' => $email, ':password_hash' => $passwordHash])) {
+                http_response_code(201); // CREATED
+                echo json_encode(['password' => $password]);
+            } else {
+                http_response_code(500); // Internal Server Error
+                echo json_encode(['error' => 'Failed to register user.']);
+            }
+        } else {
+            http_response_code(405); // Method Not Allowed
+            echo json_encode(['error' => 'Method not allowed.']);
+        }
+        break;
 
     case '/auth':
         if ($method == 'POST') {
+
+        // IP-based rate limiting check
+        $currentIP = $_SERVER['REMOTE_ADDR'];
+        $currentTime = time();
+        if (!isset($rateLimiterStorage[$currentIP])) {
+            $rateLimiterStorage[$currentIP] = ['requests' => 0, 'time' => $currentTime];
+        }
+        if ($currentTime - $rateLimiterStorage[$currentIP]['time'] < $rateLimitWindow && $rateLimiterStorage[$currentIP]['requests'] >= $rateLimitMaxRequests) {
+            http_response_code(429); // Too Many Requests
+            echo json_encode(['error' => 'Too many requests. Please try again later.']);
+            break;
+        }
+        if ($currentTime - $rateLimiterStorage[$currentIP]['time'] >= $rateLimitWindow) {
+            $rateLimiterStorage[$currentIP] = ['requests' => 0, 'time' => $currentTime];
+        }
+        $rateLimiterStorage[$currentIP]['requests']++;
+
             // Determine if expired key is requested
             $expired = isset($_GET['expired']) && $_GET['expired'] === 'true';
             $keyCondition = $expired ? "<= :now" : ">= :now";
@@ -97,6 +143,16 @@ switch ($path) {
             $jwt = JWT::encode($payload, $privateKey, 'RS256', $kid);
             http_response_code(200);
             echo json_encode(['token' => $jwt]);
+
+            $requestIP = $_SERVER['REMOTE_ADDR'];
+            $logSQL = "INSERT INTO auth_logs (request_ip) VALUES (:request_ip)";
+            $logStmt = $pdo->prepare($logSQL);
+            if (!$logStmt->execute([':request_ip' => $requestIP])) {
+               
+                error_log("Failed to insert auth log for IP: $requestIP");
+            }
+
+
         } else {
             http_response_code(405);
             echo json_encode(['error' => 'Method not allowed.']);
